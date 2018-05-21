@@ -10,7 +10,12 @@ const app = express();
 app.use(express.static('public'));
 
 app.get('/api/notes', (req, res) => {
-  res.json(data);
+  
+  const searchResults = data.filter(note => {
+    note.title.includes(req.query.searchTerm);
+  });
+  
+  res.json(searchResults);
 });
 
 app.listen(8080, function () {
