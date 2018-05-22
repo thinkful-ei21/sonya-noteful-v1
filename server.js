@@ -5,11 +5,15 @@ const express = require('express');
 
 const data = require('./db/notes');
 
+const {myLogger} = require('./middleware/logger');
+
 const {PORT} = require('./config');
 
 const app = express();
 
 app.use(express.static('public'));
+
+app.use(myLogger);
 
 app.get('/api/notes/:id', (req, res) => {
   const id = req.params.id;
@@ -27,6 +31,15 @@ app.get('/api/notes', (req, res) => {
   
     res.json(searchResults);
   }
+});
+
+
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500);
+  res.json({
+    message: err.message,
+    error:err
+  });
 });
 
 app.listen(PORT, function () {
