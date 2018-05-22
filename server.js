@@ -3,7 +3,10 @@
 // Load array of notes
 const express = require('express');
 
+
 const data = require('./db/notes');
+const simDB = require('./db/simDB');
+const notes = simDB.initialize(data);
 
 const {myLogger} = require('./middleware/logger');
 
@@ -15,22 +18,31 @@ app.use(express.static('public'));
 
 app.use(myLogger);
 
-app.get('/api/notes/:id', (req, res) => {
+app.get('/api/notes/:id', (req, res, next) => {
   const id = req.params.id;
-  res.json(data.find(item => item.id === Number(id)));
+
+  notes.find(id, (err, item) => {
+    if (err) {
+      return next(err);
+    }
+    if (item) {
+      res.json(item);
+    } else {
+      next();
+    }
+  });
 });
 
-app.get('/api/notes', (req, res) => {
-  const searchTerm = req.query.searchTerm;
-  if (!searchTerm) {
-    res.json(data);
-  } else {
-    const searchResults = data.filter(note => {
-      return note.title.includes(req.query.searchTerm);
-    });
-  
-    res.json(searchResults);
-  }
+
+app.get('/api/notes', (req, res, next) => {
+  const {searchTerm} = req.query;
+
+  notes.filter(searchTerm, (err, list) => {
+    if(err) {
+      return next(err);
+    }
+    res.json(list);
+  });
 });
 
 
