@@ -17,12 +17,16 @@ app.get('/api/notes/:id', (req, res) => {
 });
 
 app.get('/api/notes', (req, res) => {
+  const searchTerm = req.query.searchTerm;
+  if (!searchTerm) {
+    res.json(data);
+  } else {
+    const searchResults = data.filter(note => {
+      return note.title.includes(req.query.searchTerm);
+    });
   
-  const searchResults = data.filter(note => {
-    note.title.includes(req.query.searchTerm);
-  });
-  
-  res.json(searchResults);
+    res.json(searchResults);
+  }
 });
 
 app.listen(PORT, function () {
