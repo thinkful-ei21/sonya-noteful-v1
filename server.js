@@ -12,11 +12,19 @@ const {myLogger} = require('./middleware/logger');
 
 const {PORT} = require('./config');
 
+// Create an Express application
 const app = express();
 
+// log all requests
+app.use(myLogger);
+
+// create a static webserver
 app.use(express.static('public'));
 
-app.use(myLogger);
+// parse request body
+app.use(express.json());
+
+
 
 app.get('/api/notes/:id', (req, res, next) => {
   const id = req.params.id;
@@ -45,6 +53,31 @@ app.get('/api/notes', (req, res, next) => {
   });
 });
 
+app.put('/api/notes/:id', (req, res, next) => {
+  const id = req.params.id;
+
+  /******Never trust users - validate input*******/
+
+  const updateObj = {};
+  const updateFields = ['title', 'content'];
+
+  updateFields.forEach(field => {
+    if (field in req.body) {
+      updateObj[field] = req.body[field];
+    }
+  });
+
+  notes.update(id, updateObj, (err, item) => {
+    if (err) {
+      return next(err);
+    }
+    if (item) {
+      res.json(item);
+    } else {
+      next();
+    }
+  });
+});
 
 app.use(function (err, req, res, next) {
   res.status(err.status || 500);
@@ -53,6 +86,8 @@ app.use(function (err, req, res, next) {
     error:err
   });
 });
+
+
 
 app.listen(PORT, function () {
   console.info(`Server listening on ${this.address().port}`);
