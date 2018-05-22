@@ -9,6 +9,11 @@ const app = express();
 
 app.use(express.static('public'));
 
+app.get('/api/notes/:id', (req, res) => {
+  const id = req.params.id;
+  res.json(data.find(item => item.id === Number(id)));
+});
+
 app.get('/api/notes', (req, res) => {
   
   const searchResults = data.filter(note => {
