@@ -8,7 +8,9 @@ const data = require('./db/notes');
 const simDB = require('./db/simDB');
 const notes = simDB.initialize(data);
 
-const {myLogger} = require('./middleware/logger');
+const morgan = require('morgan');
+
+
 
 const {PORT} = require('./config');
 
@@ -16,7 +18,7 @@ const {PORT} = require('./config');
 const app = express();
 
 // log all requests
-app.use(myLogger);
+app.use(morgan('dev'));
 
 // create a static webserver
 app.use(express.static('public'));
@@ -24,8 +26,19 @@ app.use(express.static('public'));
 // parse request body
 app.use(express.json());
 
+// Get All (and search by query)
+app.get('/api/notes', (req, res, next) => {
+  const {searchTerm} = req.query;
 
+  notes.filter(searchTerm, (err, list) => {
+    if(err) {
+      return next(err);
+    }
+    res.json(list);
+  });
+});
 
+// Get a single item
 app.get('/api/notes/:id', (req, res, next) => {
   const id = req.params.id;
 
@@ -38,18 +51,6 @@ app.get('/api/notes/:id', (req, res, next) => {
     } else {
       next();
     }
-  });
-});
-
-
-app.get('/api/notes', (req, res, next) => {
-  const {searchTerm} = req.query;
-
-  notes.filter(searchTerm, (err, list) => {
-    if(err) {
-      return next(err);
-    }
-    res.json(list);
   });
 });
 
@@ -79,6 +80,15 @@ app.put('/api/notes/:id', (req, res, next) => {
   });
 });
 
+//catch-all 404
+app.use(function (req, res, next) {
+  const err = new Error('Not Found');
+  err.status = 404;
+  //res.status(404).json({ message: 'Not Found'});
+  next(err);
+});
+
+//catch-all Error handler
 app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.json({
@@ -86,7 +96,6 @@ app.use(function (err, req, res, next) {
     error:err
   });
 });
-
 
 
 app.listen(PORT, function () {
