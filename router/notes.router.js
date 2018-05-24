@@ -58,36 +58,61 @@ router.post('/notes', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-
-  notes.create(newItem, (err, item) => {
-    if (err) {
-      return next(err);
-    }
-    if (item) {
-      res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
-    } else {
-      next();
-    }
-  });
+  
+  notes.create(newItem)
+    .then(note => {
+      if (note) {
+        res.json(note);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
 });
+//   notes.create(newItem, (err, item) => {
+//     if (err) {
+//       return next(err);
+//     }
+//     if (item) {
+//       res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
+//     } else {
+//       next();
+//     }
+//   });
+// });
 
-
+  
 
 
 router.delete('/notes/:id', (req, res, next) => {
-	
-  notes.delete(req.params.id, (err, len) => {
-    if (err) {
-      res.status(500).end();
-    } else {
-      if (len) {
-        res.status(204).end();
+
+  notes.delete(req.params.id)
+    .then(note => {
+      if (note) {
+        res.json(note);
       } else {
-        res.status(404).end();
+        next();
       }
-    }
-  });
+    })
+    .catch(err => {
+      next(err);
+    });
 });
+	
+//   notes.delete(req.params.id, (err, len) => {
+//     if (err) {
+//       res.status(500).end();
+//     } else {
+//       if (len) {
+//         res.status(204).end();
+//       } else {
+//         res.status(404).end();
+//       }
+//     }
+//   });
+// });
 
 
 router.get('/notes/:id', (req, res, next) => {
