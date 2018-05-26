@@ -46,7 +46,7 @@ describe('404 handler', function () {
 
 });
 
-describe('GET /notes', function () {
+describe('GET api/notes', function () {
 
   it.only('should display all notes', function () {
     return chai.request(app)
@@ -64,9 +64,32 @@ describe('GET /notes', function () {
   });
   it.only('should display notes containing specified query', function () {
     return chai.request(app)
+      .get('/api/notes?searchTerm=life')
+      .then(function (res) {
+        expect(res).to.be.json;
+        console.log(res.body[0].title);
+        expect(res.body[0].title).to.include('life');
+      });
+  });
+  it.only('should return empty array for an incorrect query', function() {
+    return chai.request(app)
       .get('/api/notes?searchTerm=fine')
       .then(function (res) {
-        console.log('does this work?');
+        expect(res.body).to.deep.equal([]);
       });
   });
 });
+
+// describe('GET /api/notes/:id', function () {
+//   it('should return note matching id param', function() {
+//     return chai.request(app)
+//       .get('/api/notes/1005')
+//       .then(function (res) {
+//         expect(res).to.be.a('object');
+//         expect(res).to.be.json;
+//         expect(res).to.have.status(200);
+//         expect(res.body.title).to.equal('10 ways cats can help you live to 100');
+//         expect(res.body.content).to.equal('Lorem ipsum dolor sit amet, boring consectetur adipiscing elit, sed do eiusmod tempo incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.');
+//       });
+//   });
+// });
