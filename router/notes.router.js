@@ -1,32 +1,81 @@
 'use strict';
 
 const express = require('express');
+
+//Create a router instance (aka 'mini-app')
 const router = express.Router();
 
 
-//DATABASE
+// simple in-memory DATABASE
 const data = require('../db/notes');
 const simDB = require('../db/simDB');  
 const notes = simDB.initialize(data);
 
+router.get('/notes', (req, res, next) => {
+  // const searchParam = req.query.searchTerm;
+  // const filteredSearch = data.filter(note => note.title.includes(searchParam));
+  // res.json(filteredSearch);
 
+  // const {searchTerm} = req.query;
+  // notes.filter(searchTerm, (err, list) => {
+  //    if (err) {
+  //      return next(err); // goes to error handler
+  //    }
+  //    res.json(list); // responds with filtered array
+  //  });
+
+  const {searchTerm} = req.query;
+  notes.filter(searchTerm)
+    .then(list => {
+      if (list) {
+        res.json(list);
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+
+// Get a single item
+router.get('/notes/:id', (req, res, next) => {
+  const id = req.params.id;
+
+  notes.find(id)
+    .then(item => {
+      if (item) {
+        res.json(item);
+      } else {
+        next();
+      }
+    })
+    .catch(err => next(err));
+});
+
+//Put update an item
 router.put('/notes/:id', (req, res, next) => {
   const id = req.params.id;
 
-  /***** Never trust users - validate input *****/
-  const { title, content } = req.body;
+  const updateObj = {};
+  const updateableFields = ['title', 'content'];
 
-  const newItem = { title, content };
-  if (!newItem.title) {
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      updateObj[field] = req.body[field];
+    }
+  });
+
+  /***** Never trust users - validate input *****/
+
+  if (!updateObj.title) {
     const err = new Error('Missing `title` in request body');
     err.status = 404;
     return next(err);
   }
 
-  notes.update(id, newItem)
-    .then(note => {
-      if (note) {
-        res.json(note);
+  notes.update(id, updateObj)
+    .then(item => {
+      if (item) {
+        res.json(item);
       } else {
         next();
       }
@@ -47,7 +96,7 @@ router.put('/notes/:id', (req, res, next) => {
 //   }
 // });
 
-
+//Post/insert an item
 router.post('/notes', (req, res, next) => {
   const { title, content } = req.body;
 
@@ -63,8 +112,6 @@ router.post('/notes', (req, res, next) => {
     .then(item => {
       if (item) {
         res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
-      } else {
-        next();
       }
     })
     .catch(err => {
@@ -85,7 +132,7 @@ router.post('/notes', (req, res, next) => {
 
   
 
-
+//Delete an item
 router.delete('/notes/:id', (req, res, next) => {
 
   notes.delete(req.params.id)
@@ -115,65 +162,8 @@ router.delete('/notes/:id', (req, res, next) => {
 // });
 
 
-router.get('/notes/:id', (req, res, next) => {
-  // const findNoteById = data.find(note => note.id === Number(req.params.id));
-  // if(findNoteById) {
-  // 	res.json(findNoteById);	
-  // } else {
-  // 	var err = new Error('Not Found');
-  //   err.status = 404;
-  //   res.status(404).json({ message: 'Not Found' });
-  // }
 
 
-// 	notes.find(req.params.id, (err, list) => {
-// 		if (err) {
-// 			return next(err);
-// 		}
-// 		res.json(list);
-// 	});
-// });
-  notes.find(req.params.id)
-    .then(item => {
-      if (item) {
-        res.json(item);
-      } else {
-        next();
-      }
-    })
-    .catch(err => {
-      next(err);
-    });
-});
-
-
-
-router.get('/notes', (req, res, next) => {
-  // const searchParam = req.query.searchTerm;
-  // const filteredSearch = data.filter(note => note.title.includes(searchParam));
-  // res.json(filteredSearch);
-
-  // const {searchTerm} = req.query;
-  // notes.filter(searchTerm, (err, list) => {
-  //    if (err) {
-  //      return next(err); // goes to error handler
-  //    }
-  //    res.json(list); // responds with filtered array
-  //  });
-
-  const {searchTerm} = req.query;
- 	notes.filter(searchTerm)
- 		.then(note => {
- 			if (note) {
- 				res.json(note);
- 			} else {
- 				next();
- 			}
- 		})
- 		.catch(err => {
- 			next(err);
- 		});
-});
 
 
 
