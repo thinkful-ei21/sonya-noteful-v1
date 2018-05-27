@@ -14,16 +14,16 @@ router.put('/notes/:id', (req, res, next) => {
   const id = req.params.id;
 
   /***** Never trust users - validate input *****/
-  const updateObj = {};
-  const updateFields = ['title', 'content'];
+  const { title, content } = req.body;
 
-  updateFields.forEach(field => {
-    if (field in req.body) {
-      updateObj[field] = req.body[field];
-    }
-  });
+  const newItem = { title, content };
+  if (!newItem.title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 404;
+    return next(err);
+  }
 
-  notes.update(id, updateObj)
+  notes.update(id, newItem)
     .then(note => {
       if (note) {
         res.json(note);
@@ -60,9 +60,9 @@ router.post('/notes', (req, res, next) => {
   }
   
   notes.create(newItem)
-    .then(note => {
-      if (note) {
-        res.json(note);
+    .then(item => {
+      if (item) {
+        res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
       } else {
         next();
       }
